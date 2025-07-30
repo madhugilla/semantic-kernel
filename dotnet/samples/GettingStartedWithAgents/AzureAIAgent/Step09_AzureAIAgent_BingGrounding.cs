@@ -1,8 +1,5 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
-using System.Collections.ObjectModel;
 using Azure.AI.Agents.Persistent;
-using Azure.Identity;
-using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.Agents.AzureAI;
@@ -11,59 +8,24 @@ using Microsoft.SemanticKernel.ChatCompletion;
 namespace GettingStarted.AzureAgents;
 
 /// <summary>
-/// Demonstrate using Bing grounding on <see cref="AzureAIAgent"/> .
+/// Demonstrate using code-interpreter on <see cref="AzureAIAgent"/> .
 /// </summary>
-public class Step09_AzureAIAgent_BingGrounding
+public class Step09_AzureAIAgent_BingGrounding(ITestOutputHelper output) : BaseAzureAgentTest(output)
 {
-    /// <summary>
-    /// Metadata key to indicate the assistant as created for a sample.
-    /// </summary>
-    private const string SampleMetadataKey = "sksample";
-
-    /// <summary>
-    /// Metadata to indicate the object was created for a sample.
-    /// </summary>
-    private static readonly ReadOnlyDictionary<string, string> SampleMetadata =
-        new(new Dictionary<string, string>
-        {
-            { SampleMetadataKey, bool.TrueString }
-        });
-
-    public class AzureAIConfig
+    [Fact]
+    public async Task UseBingGroundingToolWithAgent()
     {
-        public string ChatModelId { get; set; } = string.Empty;
-        public string Endpoint { get; set; } = string.Empty;
-        public string WorkflowEndpoint { get; set; } = string.Empty;
-        public string BingConnectionId { get; set; } = string.Empty;
-        public string VectorStoreId { get; set; } = string.Empty;
-        public string AgentId { get; set; } = string.Empty;
-    }
-
-    public static async Task Main()
-    {
-        // Load configuration
-        var configRoot = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.Development.json", true)
-            .AddEnvironmentVariables()
-            .Build();
-
-        var azureAIConfig = configRoot.GetSection("AzureAI").Get<AzureAIConfig>() ??
-            throw new InvalidOperationException("AzureAI configuration not found.");
-
-        // Create Azure AI Agent client
-        var client = AzureAIAgent.CreateAgentsClient(azureAIConfig.Endpoint, new AzureCliCredential());
-
-        // Access the BingGrounding connection (simplified for standalone use)
-        string connectionId = azureAIConfig.BingConnectionId;
+        // Access the BingGrounding connection
+        string connectionId = await this.GetConnectionId(TestConfiguration.AzureAI.BingConnectionId);
         BingGroundingSearchConfiguration bingToolConfiguration = new(connectionId);
         BingGroundingSearchToolParameters bingToolParameters = new([bingToolConfiguration]);
-        PersistentAgent definition = await client.Administration.CreateAgentAsync(
-            azureAIConfig.ChatModelId,
+        PersistentAgent definition = await this.Client.Administration.CreateAgentAsync(
+            TestConfiguration.AzureAI.ChatModelId,
             tools: [new BingGroundingToolDefinition(bingToolParameters)]);
-        AzureAIAgent agent = new(definition, client);
+        AzureAIAgent agent = new(definition, this.Client);
 
         // Create a thread for the agent conversation.
-        AzureAIAgentThread thread = new(client, metadata: SampleMetadata);
+        AzureAIAgentThread thread = new(this.Client, metadata: SampleMetadata);
 
         // Respond to user input
         try
@@ -74,34 +36,85 @@ public class Step09_AzureAIAgent_BingGrounding
         finally
         {
             await thread.DeleteAsync();
-            await client.Administration.DeleteAgentAsync(agent.Id);
+            await this.Client.Administration.DeleteAgentAsync(agent.Id);
         }
 
         // Local function to invoke agent and display the conversation messages.
         async Task InvokeAgentAsync(string input)
         {
             ChatMessageContent message = new(AuthorRole.User, input);
-            WriteAgentChatMessage(message);
+            this.WriteAgentChatMessage(message);
 
             await foreach (ChatMessageContent response in agent.InvokeAsync(message, thread))
             {
-                WriteAgentChatMessage(response);
+                this.WriteAgentChatMessage(response);
             }
         }
     }
 
-    /// <summary>
-    /// Common method to write formatted agent chat content to the console.
-    /// </summary>
-    private static void WriteAgentChatMessage(ChatMessageContent message)
+    [Fact]
+    public async Task UseBingGroundingToolWithStreaming()
     {
-        // Include ChatMessageContent.AuthorName in output, if present.
-        string authorExpression = message.Role == AuthorRole.User ? string.Empty : FormatAuthor();
-        // Include TextContent (via ChatMessageContent.Content), if present.
-        string contentExpression = string.IsNullOrWhiteSpace(message.Content) ? string.Empty : message.Content;
-        string codeMarker = " ";
-        Console.WriteLine($"\n# {message.Role}{authorExpression}:{codeMarker}{contentExpression}");
+        // Access the BingGrounding connection
+        string connectionId = await this.GetConnectionId(TestConfiguration.AzureAI.BingConnectionId);
+        BingGroundingSearchConfiguration bingToolConfiguration = new(connectionId);
+        BingGroundingSearchToolParameters bingToolParameters = new([bingToolConfiguration]);
 
-        string FormatAuthor() => message.AuthorName is not null ? $" - {message.AuthorName ?? " * "}" : string.Empty;
+        // Define the agent
+        PersistentAgent definition = await this.Client.Administration.CreateAgentAsync(
+            TestConfiguration.AzureAI.ChatModelId,
+            tools: [new BingGroundingToolDefinition(bingToolParameters)]);
+        AzureAIAgent agent = new(definition, this.Client);
+
+        // Create a thread for the agent conversation.
+        AzureAIAgentThread thread = new(this.Client, metadata: SampleMetadata);
+
+        // Respond to user input
+        try
+        {
+            await InvokeAgentAsync("What is the current price of gold?");
+
+            // Display chat history
+            Console.WriteLine("\n================================");
+            Console.WriteLine("CHAT HISTORY");
+            Console.WriteLine("================================");
+
+            await foreach (ChatMessageContent message in thread.GetMessagesAsync())
+            {
+                this.WriteAgentChatMessage(message);
+            }
+        }
+        finally
+        {
+            await thread.DeleteAsync();
+            await this.Client.Administration.DeleteAgentAsync(agent.Id);
+        }
+
+        // Local function to invoke agent and display the conversation messages.
+        async Task InvokeAgentAsync(string input)
+        {
+            ChatMessageContent message = new(AuthorRole.User, input);
+            this.WriteAgentChatMessage(message);
+
+            bool isFirst = false;
+            await foreach (StreamingChatMessageContent response in agent.InvokeStreamingAsync(message, thread))
+            {
+                if (!isFirst)
+                {
+                    Console.WriteLine($"\n# {response.Role} - {response.AuthorName ?? "*"}:");
+                    isFirst = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(response.Content))
+                {
+                    Console.WriteLine($"\t> streamed: {response.Content}");
+                }
+
+                foreach (StreamingAnnotationContent? annotation in response.Items.OfType<StreamingAnnotationContent>())
+                {
+                    Console.WriteLine($"\t            {annotation.ReferenceId} - {annotation.Title}");
+                }
+            }
+        }
     }
 }

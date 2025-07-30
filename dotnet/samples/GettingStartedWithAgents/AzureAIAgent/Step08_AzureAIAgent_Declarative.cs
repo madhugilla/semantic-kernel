@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
-using System.Collections.ObjectModel;
 using Azure.Core;
 using Azure.Identity;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
@@ -15,58 +13,14 @@ namespace GettingStarted.AzureAgents;
 /// <summary>
 /// This example demonstrates how to declaratively create instances of <see cref="AzureAIAgent"/>.
 /// </summary>
-public class Step08_AzureAIAgent_Declarative
+public class Step08_AzureAIAgent_Declarative : BaseAzureAgentTest
 {
-    /// <summary>
-    /// Metadata key to indicate the assistant as created for a sample.
-    /// </summary>
-    private const string SampleMetadataKey = "sksample";
-
-    /// <summary>
-    /// Metadata to indicate the object was created for a sample.
-    /// </summary>
-    private static readonly ReadOnlyDictionary<string, string> SampleMetadata =
-        new(new Dictionary<string, string>
-        {
-            { SampleMetadataKey, bool.TrueString }
-        });
-
-    public class AzureAIConfig
-    {
-        public string ChatModelId { get; set; } = string.Empty;
-        public string Endpoint { get; set; } = string.Empty;
-        public string WorkflowEndpoint { get; set; } = string.Empty;
-        public string BingConnectionId { get; set; } = string.Empty;
-        public string VectorStoreId { get; set; } = string.Empty;
-        public string AgentId { get; set; } = string.Empty;
-    }
-
     /// <summary>
     /// Demonstrates creating and using a Chat Completion Agent with a Kernel.
     /// </summary>
-    public static async Task Main()
+    [Fact]
+    public async Task AzureAIAgentWithConfiguration()
     {
-        // Load configuration
-        var configRoot = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.Development.json", true)
-            .AddEnvironmentVariables()
-            .Build();
-
-        var azureAIConfig = configRoot.GetSection("AzureAI").Get<AzureAIConfig>() ??
-            throw new InvalidOperationException("AzureAI configuration not found.");
-
-        // Create Azure AI Agent client
-        var client = AzureAIAgent.CreateAgentsClient(azureAIConfig.Endpoint, new AzureCliCredential());
-
-        Console.WriteLine("=== Azure AI Agent Declarative Example ===");
-        
-        // Create kernel
-        var builder = Kernel.CreateBuilder();
-        builder.Services.AddSingleton(client);
-        builder.Services.AddSingleton<TokenCredential>(new AzureCliCredential());
-        var kernel = builder.Build();
-
-        // Simple declarative agent example
         var text =
             """
             type: foundry_agent
@@ -78,57 +32,20 @@ public class Step08_AzureAIAgent_Declarative
               connection:
                 connection_string: ${AzureAI:ConnectionString}
             """;
-        
         AzureAIAgentFactory factory = new();
-        var agent = await factory.CreateAgentFromYamlAsync(text, new() { Kernel = kernel }, configRoot);
 
-        await InvokeAgentAsync(agent!, "Hello! Can you help me with a simple task?");
+        var builder = Kernel.CreateBuilder();
+        builder.Services.AddSingleton(this.Client);
+        builder.Services.AddSingleton<TokenCredential>(new AzureCliCredential());
+        var kernel = builder.Build();
+
+        var agent = await factory.CreateAgentFromYamlAsync(text, new() { Kernel = kernel }, TestConfiguration.ConfigurationRoot);
+
+        await InvokeAgentAsync(agent!, "Could you please create a bar chart for the operating profit using the following data and provide the file to me? Company A: $1.2 million, Company B: $2.5 million, Company C: $3.0 million, Company D: $1.8 million");
     }
 
-    /// <summary>
-    /// Invoke the agent with the user input.
-    /// </summary>
-    private static async Task InvokeAgentAsync(Agent agent, string input)
-    {
-        Microsoft.SemanticKernel.Agents.AgentThread? agentThread = null;
-        try
-        {
-            await foreach (AgentResponseItem<ChatMessageContent> response in agent.InvokeAsync(new ChatMessageContent(AuthorRole.User, input)))
-            {
-                agentThread = response.Thread;
-                WriteAgentChatMessage(response.Message);
-            }
-        }
-        finally
-        {
-            var azureaiAgent = agent as AzureAIAgent;
-            if (azureaiAgent != null)
-            {
-                await azureaiAgent.Client.Administration.DeleteAgentAsync(azureaiAgent.Id);
-
-                if (agentThread is not null)
-                {
-                    await agentThread.DeleteAsync();
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Common method to write formatted agent chat content to the console.
-    /// </summary>
-    private static void WriteAgentChatMessage(ChatMessageContent message)
-    {
-        // Include ChatMessageContent.AuthorName in output, if present.
-        string authorExpression = message.Role == AuthorRole.User ? string.Empty : FormatAuthor();
-        // Include TextContent (via ChatMessageContent.Content), if present.
-        string contentExpression = string.IsNullOrWhiteSpace(message.Content) ? string.Empty : message.Content;
-        string codeMarker = " ";
-        Console.WriteLine($"\n# {message.Role}{authorExpression}:{codeMarker}{contentExpression}");
-
-        string FormatAuthor() => message.AuthorName is not null ? $" - {message.AuthorName ?? " * "}" : string.Empty;
-    }
-}
+    [Fact]
+    public async Task AzureAIAgentWithKernel()
     {
         var text =
             """
@@ -146,7 +63,7 @@ public class Step08_AzureAIAgent_Declarative
         await InvokeAgentAsync(agent!, "Could you please create a bar chart for the operating profit using the following data and provide the file to me? Company A: $1.2 million, Company B: $2.5 million, Company C: $3.0 million, Company D: $1.8 million");
     }
 
-    public static async Task Main()
+    [Fact]
     public async Task AzureAIAgentWithId()
     {
         var text =
@@ -165,7 +82,7 @@ public class Step08_AzureAIAgent_Declarative
             deleteAgent: false);
     }
 
-    public static async Task Main()
+    [Fact]
     public async Task AzureAIAgentWithCodeInterpreter()
     {
         var text =
@@ -186,7 +103,7 @@ public class Step08_AzureAIAgent_Declarative
         await InvokeAgentAsync(agent!, "Use code to determine the values in the Fibonacci sequence that that are less then the value of 101?");
     }
 
-    public static async Task Main()
+    [Fact]
     public async Task AzureAIAgentWithFunctions()
     {
         var text =
@@ -223,7 +140,7 @@ public class Step08_AzureAIAgent_Declarative
         await InvokeAgentAsync(agent!, "What is the special soup and how much does it cost?");
     }
 
-    public static async Task Main()
+    [Fact]
     public async Task AzureAIAgentWithBingGrounding()
     {
         var text =
@@ -252,7 +169,7 @@ public class Step08_AzureAIAgent_Declarative
         await InvokeAgentAsync(agent!, "What is the latest new about the Semantic Kernel?");
     }
 
-    public static async Task Main()
+    [Fact]
     public async Task AzureAIAgentWithFileSearch()
     {
         var text =
@@ -279,7 +196,7 @@ public class Step08_AzureAIAgent_Declarative
         await InvokeAgentAsync(agent!, "What are the key features of the Semantic Kernel?");
     }
 
-    public static async Task Main()
+    [Fact]
     public async Task AzureAIAgentWithOpenAPI()
     {
         var text =
@@ -368,7 +285,7 @@ public class Step08_AzureAIAgent_Declarative
         await InvokeAgentAsync(agent!, "What is the current weather in Dublin?");
     }
 
-    public static async Task Main()
+    [Fact]
     public async Task AzureAIAgentWithOpenAPIYaml()
     {
         var text =
@@ -434,7 +351,7 @@ public class Step08_AzureAIAgent_Declarative
         await InvokeAgentAsync(agent!, "What is the current weather in Dublin?");
     }
 
-    public static async Task Main()
+    [Fact]
     public async Task AzureAIAgentWithTemplate()
     {
         var text =
