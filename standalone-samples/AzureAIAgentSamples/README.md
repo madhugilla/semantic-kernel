@@ -55,19 +55,64 @@ dotnet run 1  # Runs Step 01 - Azure AI Agent Basic Usage
 
 ## Available Samples
 
-Currently available:
-- **Step 01** - Azure OpenAI Chat Completion with Story Generation
+All samples are now implemented and available:
 
-Coming soon:
-- **Step 02** - Azure OpenAI with Plugins  
-- **Step 03** - Azure OpenAI with Vision
-- **Step 04** - Azure OpenAI with Code Interpreter
-- **Step 05** - Azure OpenAI with File Search
-- **Step 06** - Azure OpenAI with OpenAPI
-- **Step 07** - Azure OpenAI with Functions
-- **Step 08** - Azure OpenAI Declarative
-- **Step 09** - Azure OpenAI with Bing Grounding
-- **Step 10** - JSON Response
+### 1. Basic Chat Completion with Story Generation
+Demonstrates basic Azure OpenAI chat completion using prompt templates from YAML files. Shows how to generate creative stories with customizable parameters.
+
+### 2. Plugins and Function Calling
+Shows how to create and use plugins with Semantic Kernel. Includes examples of:
+- Menu plugin for restaurant scenarios
+- Widget factory with enum parameters
+- Custom prompt functions for text analysis
+
+### 3. Vision Capabilities
+Demonstrates Azure OpenAI's vision capabilities including:
+- Analyzing images from URLs
+- Processing local image files
+- Describing visual content
+
+### 4. Code Analysis and Generation
+Shows code-related AI capabilities:
+- Code analysis and bug detection
+- Performance optimization suggestions
+- Code generation from requirements
+
+### 5. File Search and Document Analysis
+Demonstrates document processing capabilities:
+- Text document analysis
+- Key theme extraction
+- Structured data search
+
+### 6. OpenAPI Integration
+Shows API-related functionality:
+- OpenAPI specification generation
+- API endpoint analysis
+- Documentation generation
+
+### 7. Custom Functions
+Demonstrates creating and using custom kernel functions:
+- Mathematical operations (square root, factorial, prime checking)
+- Custom prompt functions
+- Function chaining
+
+### 8. Declarative AI Patterns
+Shows declarative approaches to AI:
+- Template-based workflows
+- Multi-step processing
+- Reusable prompt patterns
+
+### 9. Search Grounding Concepts
+Demonstrates information grounding and fact-checking:
+- Source verification recommendations
+- Time-sensitive information handling
+- Bias detection
+
+### 10. JSON Response Formatting
+Shows structured output generation:
+- JSON object responses
+- Schema validation
+- Structured data parsing
 
 ## Sample Details
 
@@ -89,16 +134,30 @@ AzureAIAgentSamples/
 ├── Program.cs                     # Main console application entry point
 ├── appsettings.json              # Configuration file
 ├── AzureAIAgentSamples.csproj    # Project file with dependencies
-├── Samples/                      # Sample implementations
-│   └── Step01_AzureAIAgent.cs    # Basic Azure OpenAI chat completion sample
+├── Samples/                      # All sample implementations
+│   ├── Step01_AzureAIAgent.cs
+│   ├── Step02_AzureAIAgent_Plugins.cs
+│   ├── Step03_AzureAIAgent_Vision.cs
+│   ├── Step04_AzureAIAgent_CodeInterpreter.cs
+│   ├── Step05_AzureAIAgent_FileSearch.cs
+│   ├── Step06_AzureAIAgent_OpenAPI.cs
+│   ├── Step07_AzureAIAgent_Functions.cs
+│   ├── Step08_AzureAIAgent_Declarative.cs
+│   ├── Step09_AzureAIAgent_BingGrounding.cs
+│   └── Step10_JsonResponse.cs
+├── Plugins/                      # Reusable plugin implementations
+│   ├── MenuPlugin.cs
+│   └── WidgetFactory.cs
 ├── Utilities/                    # Helper utilities
 │   └── ResourceHelper.cs         # Resource file reader
 └── Resources/                    # Template and resource files
-    ├── GenerateStory.yaml        # Story generation prompt template
-    ├── cat.jpg                   # Sample image for vision samples
-    ├── countries.json            # Sample data file
-    ├── employees.pdf             # Sample PDF for file search
-    └── weather.json              # Sample weather data
+    ├── AutoInvokeTools.yaml
+    ├── GenerateStory.yaml
+    ├── Hamlet_full_play_summary.txt
+    ├── cat.jpg
+    ├── countries.json
+    ├── employees.pdf
+    └── weather.json
 ```
 
 ## Dependencies

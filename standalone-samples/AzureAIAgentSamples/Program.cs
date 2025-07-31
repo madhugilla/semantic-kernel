@@ -28,15 +28,15 @@ public class Program
     {
         Console.WriteLine("Available samples:");
         Console.WriteLine("1. Step 01 - Azure OpenAI Chat Completion with Story Generation");
-        Console.WriteLine("2. Step 02 - Azure OpenAI with Plugins (Coming Soon)");
-        Console.WriteLine("3. Step 03 - Azure OpenAI with Vision (Coming Soon)");
-        Console.WriteLine("4. Step 04 - Azure OpenAI with Code Interpreter (Coming Soon)");
-        Console.WriteLine("5. Step 05 - Azure OpenAI with File Search (Coming Soon)");
-        Console.WriteLine("6. Step 06 - Azure OpenAI with OpenAPI (Coming Soon)");
-        Console.WriteLine("7. Step 07 - Azure OpenAI with Functions (Coming Soon)");
-        Console.WriteLine("8. Step 08 - Azure OpenAI Declarative (Coming Soon)");
-        Console.WriteLine("9. Step 09 - Azure OpenAI with Bing Grounding (Coming Soon)");
-        Console.WriteLine("10. Step 10 - JSON Response (Coming Soon)");
+        Console.WriteLine("2. Step 02 - Azure OpenAI with Plugins");
+        Console.WriteLine("3. Step 03 - Azure OpenAI with Vision");
+        Console.WriteLine("4. Step 04 - Azure OpenAI Code Analysis and Generation");
+        Console.WriteLine("5. Step 05 - Azure OpenAI File Search and Document Analysis");
+        Console.WriteLine("6. Step 06 - Azure OpenAI OpenAPI Integration");
+        Console.WriteLine("7. Step 07 - Azure OpenAI Custom Functions");
+        Console.WriteLine("8. Step 08 - Azure OpenAI Declarative Patterns");
+        Console.WriteLine("9. Step 09 - Azure OpenAI Search Grounding Concepts");
+        Console.WriteLine("10. Step 10 - Azure OpenAI JSON Response Formatting");
         Console.WriteLine();
         Console.Write("Select a sample (1-10) or press Enter to exit: ");
 
@@ -57,31 +57,31 @@ public class Program
                     await Step01_AzureAIAgent.RunAsync();
                     break;
                 case 2:
-                    Console.WriteLine("Step 02 sample will be available soon.");
+                    await Step02_AzureAIAgent_Plugins.RunAsync();
                     break;
                 case 3:
-                    Console.WriteLine("Step 03 sample will be available soon.");
+                    await Step03_AzureAIAgent_Vision.RunAsync();
                     break;
                 case 4:
-                    Console.WriteLine("Step 04 sample will be available soon.");
+                    await Step04_AzureAIAgent_CodeInterpreter.RunAsync();
                     break;
                 case 5:
-                    Console.WriteLine("Step 05 sample will be available soon.");
+                    await Step05_AzureAIAgent_FileSearch.RunAsync();
                     break;
                 case 6:
-                    Console.WriteLine("Step 06 sample will be available soon.");
+                    await Step06_AzureAIAgent_OpenAPI.RunAsync();
                     break;
                 case 7:
-                    Console.WriteLine("Step 07 sample will be available soon.");
+                    await Step07_AzureAIAgent_Functions.RunAsync();
                     break;
                 case 8:
-                    Console.WriteLine("Step 08 sample will be available soon.");
+                    await Step08_AzureAIAgent_Declarative.RunAsync();
                     break;
                 case 9:
-                    Console.WriteLine("Step 09 sample will be available soon.");
+                    await Step09_AzureAIAgent_BingGrounding.RunAsync();
                     break;
                 case 10:
-                    Console.WriteLine("Step 10 sample will be available soon.");
+                    await Step10_JsonResponse.RunAsync();
                     break;
                 default:
                     Console.WriteLine("Invalid sample number. Please choose 1-10.");
